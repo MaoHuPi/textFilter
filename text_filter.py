@@ -1,5 +1,3 @@
-VERSION = '1.0.0'
-filePath = {'./image/icon.ico':'', './image/icon.png':'', './font/Zpix.ttf':''}
 import os
 import numpy as np
 import tkinter
@@ -11,6 +9,7 @@ import time
 import base64
 import sys
 # basic
+VERSION = '1.0.0'
 def tsj(t, s, j):
     t = str(t)
     s = str(s)
@@ -23,24 +22,18 @@ def timeStr():
     return('{yy}_{MM}_{dd} {hh}_{mm}_{ss}'.format(yy = TJ(T.tm_year, 4), MM = TJ(T.tm_mon, 2), dd = TJ(T.tm_mday, 2), hh = TJ(T.tm_hour, 2), mm = TJ(T.tm_min, 2), ss = TJ(T.tm_sec, 2)))
 def loadBase64(data):
     return(base64.b64decode(data))
-for fileName in filePath:
-    filePath[fileName] = fileName
 def exitTool():
     global run, font
     run = False
     cv2.destroyAllWindows()
     pygame.quit()
     pygame.font.quit()
-    font = False
     sys.exit()
-# pygame_init
-pygame.init()
-icon = pygame.image.load(filePath['./image/icon.png'])
 # tkinter
 run = False
 win2 = tkinter.Tk()
 win2.title('[Text Filter | 文字濾鏡] - 設定')
-win2.iconbitmap(filePath['./image/icon.ico'])
+win2.iconbitmap('./image/icon.ico')
 vnw = win2.winfo_screenwidth()/100
 vnh = win2.winfo_screenheight()/100
 vw = int(vnw*50)
@@ -110,7 +103,7 @@ def br(window):
     ohr.config(bg = '#000000', fg = '#000000', width = int(50*vw*wD - (formWidth)/2), font = ('zpix', int(1*vw)))
     ohr.pack()
     ohrs.append(ohr)
-pyglet.font.add_file(filePath['./font/Zpix.ttf'])
+pyglet.font.add_file('./font/Zpix.ttf')
 otitle = tkinter.Label(win2, text = '[Text Filter | 文字濾鏡] - 設定')
 otitle.config(bg = '#6464ff', fg = '#ffffff', width = int(100*vnw), font = ('zpix', int(3*vw)))
 otitle.pack()
@@ -133,6 +126,8 @@ if run == False:
 if texts == '':
     texts = '文字濾鏡'
 # pygame
+pygame.init()
+icon = pygame.image.load('./image/icon.png')
 vw = int(vnw*50)
 vh = int(vnw*50*0.3997395833333333)
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (int((vnw*100-vw)/2), int((vnh*100-vh)/2))
@@ -144,9 +139,7 @@ vh = vh/100
 font = False
 lastFontSize = 0
 import io
-pathZpix = filePath['./font/Zpix.ttf']
-# pathZpix = io.BytesIO(loadBase64(fileData['./font/Zpix.ttf']))
-def fontSet(size, path = pathZpix):
+def fontSet(size, path = './font/Zpix.ttf'):
     global font, lastFontSize
     lastFontSize = size
     font = pygame.font.Font(path, size)
