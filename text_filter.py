@@ -2,14 +2,15 @@ import os
 import numpy as np
 import tkinter
 import tkinter.font
+from tkinter import messagebox
 import pyglet
 import pygame
 import cv2
+from PIL import ImageGrab
 import time
-import base64
 import sys
 # basic
-VERSION = '1.0.0'
+VERSION = '2.0.0'
 def tsj(t, s, j):
     t = str(t)
     s = str(s)
@@ -20,8 +21,6 @@ def timeStr():
     def TJ(n:int, s:int):
                 return(str(n).rjust(s, '0'))
     return('{yy}_{MM}_{dd} {hh}_{mm}_{ss}'.format(yy = TJ(T.tm_year, 4), MM = TJ(T.tm_mon, 2), dd = TJ(T.tm_mday, 2), hh = TJ(T.tm_hour, 2), mm = TJ(T.tm_min, 2), ss = TJ(T.tm_sec, 2)))
-def loadBase64(data):
-    return(base64.b64decode(data))
 def exitTool():
     global run, font
     run = False
@@ -29,6 +28,30 @@ def exitTool():
     pygame.quit()
     pygame.font.quit()
     sys.exit()
+# cv2
+cam = 0
+cap = False
+proportion = 1
+flip = False
+video = False
+# fourcc = cv2.VideoWriter_fourcc(*'XVID')
+camMax = 0
+def capSet(capId):
+    global cam, cap
+    cam = capId
+    cap = cv2.VideoCapture(capId)
+def capDetect():
+    global cam, camMax
+    capSet(0)
+    while int(cap.get(cv2.CAP_PROP_FPS)) != 0:
+        capSet(cam+1)
+    if cam == 0:
+        cam,  camMax = -1, -1
+        if messagebox.askokcancel('提醒','裝置未連接攝影鏡頭，是否重新偵測？\n(取消：只使用螢幕擷取)'):
+            capDetect()
+    else:
+        camMax = cam-1
+        capSet(-1)
 # tkinter
 run = False
 win2 = tkinter.Tk()
@@ -38,7 +61,6 @@ vnw = win2.winfo_screenwidth()/100
 vnh = win2.winfo_screenheight()/100
 vw = int(vnw*50)
 vh = int(vnw*50*0.3997395833333333)
-print(int(vh/vw))
 win2.geometry('%dx%d+%d+%d' % (vw, vh, int((vnw*100-vw)/2), int((vnh*100-vh)/2)))
 win2.minsize(width = vw, height = vh)
 vw = vw/100
@@ -54,6 +76,7 @@ ohrs = []
 def textSet():
     global texts, win2, run
     texts = itext.get()
+    capDetect()
     run = True
     win2.destroy()
 def _iteach():
@@ -65,7 +88,7 @@ def _iteach():
     otitle.config(text = '[Text Filter | 文字濾鏡] - 使用教學')
     br(win2)
     br(win2)
-    ocontent.config(text = '1. 在設定視窗的輸入欄位中輸入要做為濾鏡顯示的文字。\n\n2. 點擊設定視窗中的「送出文字」按鈕來完成設定。\n\n3. 待輸出視窗出現並開始攫取攝影鏡頭後，\n即可使用其它錄製、串流工具來擷取視窗輸出。\n\n4. 在輸出視窗中，\n可以透過「左」、「右」鍵來切換影像來源，\n亦可透過視窗邊框的拖曳來調整視窗大小(輸出解析度)。')
+    ocontent.config(text = '1. 在設定視窗的輸入欄位中輸入要做為濾鏡顯示的文字。\n\n2. 點擊設定視窗中的「送出文字」按鈕來完成設定。\n\n3. 待輸出視窗出現並開始攫取攝影鏡頭後，\n即可使用其它錄製、串流工具來擷取視窗輸出。\n\n4. 在輸出視窗中，可以透過「左」、「右」鍵來切換影像來源，\n亦可透過視窗邊框的拖曳來調整視窗大小(輸出解析度)，按下空白鍵則可水平翻轉輸入畫面。')
     ocontent.pack()
     br(win2)
     ihome.pack()
@@ -138,7 +161,6 @@ vw = vw/100
 vh = vh/100
 font = False
 lastFontSize = 0
-import io
 def fontSet(size, path = './font/Zpix.ttf'):
     global font, lastFontSize
     lastFontSize = size
@@ -166,24 +188,13 @@ fillText(win, '字', (50+(actionSideLength/2+actionGap))*vw, 50*vh-(actionSideLe
 fillText(win, '濾', (50-(actionSideLength/2+actionGap))*vw, 50*vh+(actionSideLength/2+actionGap)*vw, actionFgColor, againstX = 'center', againstY = 'center')
 fillText(win, '鏡', (50+(actionSideLength/2+actionGap))*vw, 50*vh+(actionSideLength/2+actionGap)*vw, actionFgColor, againstX = 'center', againstY = 'center')
 pygame.display.update()
-# cv2
-cam = 0
-cap = False
-proportion = 1
-flip = True
-video = False
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-def capSet(capId):
-    global cam, cap
-    cam = capId
-    cap = cv2.VideoCapture(capId)
-capSet(0)
-while int(cap.get(cv2.CAP_PROP_FPS)) != 0:
-    capSet(cam+1)
-camMax = cam-1
-capSet(0)
 while run:
-    ret, frame = cap.read()
+    if(cam < 0):
+        ret = True
+        frame = ImageGrab.grab(bbox = None)
+        frame = cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+    else:
+        ret, frame = cap.read()
     if ret:
         frame = cv2.resize(frame, (int(vw*100), int(vw*100*len(frame)/len(frame[0]))))
         if flip:
@@ -208,13 +219,13 @@ while run:
                     fillText(win, texts[textNum % len(texts)], j*PixelSideLength, i*PixelSideLength, color)
         pygame.display.update()
     else:
-        print(0)
+        print('[ERROR] 圖片捕捉失敗')
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exitTool()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                cam2 = cam-1 if cam > 0 else 0
+                cam2 = cam-1 if cam > -1 else -1
                 if cam != cam2:
                     capSet(cam2)
             elif event.key == pygame.K_RIGHT:
@@ -224,10 +235,11 @@ while run:
             elif event.key == pygame.K_SPACE:
                 flip = not flip
     pygame.time.Clock().tick(1000)
-    i = tsj(tsj(str(pygame.display.get_surface()), '(', 'x'), ')', 'x').split('x')
-    if vw*100 != int(i[1]) or vh*100 != int(i[1])/2:
-        vw = int(i[1])/100
-        vh = int(i[1])*len(frame)/len(frame[0])/100
-        pygame.display.set_mode((int(vw*100), int(vh*100)), pygame.RESIZABLE)
-if video != False:
-    video.release()
+    if ret:
+        i = tsj(tsj(str(pygame.display.get_surface()), '(', 'x'), ')', 'x').split('x')
+        if vw*100 != int(i[1]) or vh*100 != int(i[1])/2:
+            vw = int(i[1])/100
+            vh = int(i[1])*len(frame)/len(frame[0])/100
+            pygame.display.set_mode((int(vw*100), int(vh*100)), pygame.RESIZABLE)
+    else:
+        print('[ERROR] 視窗縮放失敗')
