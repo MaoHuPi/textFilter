@@ -9,8 +9,20 @@ import cv2
 from PIL import ImageGrab
 import time
 import sys
+from os.path import isfile
 # basic
-VERSION = '2.0.0'
+VERSION = '2.0.1'
+if not (isfile('./image/icon.ico') and isfile('./image/icon.png') and isfile('./font/Zpix.ttf')):
+    winE = tkinter.Tk()
+    winE.title('[Text Filter | 文字濾鏡] - 錯誤')
+    winE.geometry('0x0+0+0')
+    winE.resizable(0, 0)
+    winE.overrideredirect(True)
+    winE.lift()
+    winE.attributes('-alpha', 0)
+    winE.attributes('-disabled', False)
+    messagebox.showerror('錯誤','找不到檔案！\n(請確認同層的image、font資料夾與其內的所需檔案是否存在)')
+    exitTool()
 def tsj(t, s, j):
     t = str(t)
     s = str(s)
