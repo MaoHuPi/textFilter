@@ -249,7 +249,7 @@ while run:
     pygame.time.Clock().tick(1000)
     if ret:
         i = tsj(tsj(str(pygame.display.get_surface()), '(', 'x'), ')', 'x').split('x')
-        if vw*100 != int(i[1]) or vh*100 != int(i[1])/2:
+        if vw*100 != int(i[1]) or vh*100 != int(i[1])*len(frame)/len(frame[0]):
             vw = int(i[1])/100
             vh = int(i[1])*len(frame)/len(frame[0])/100
             pygame.display.set_mode((int(vw*100), int(vh*100)), pygame.RESIZABLE)
